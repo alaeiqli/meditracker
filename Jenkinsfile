@@ -1,48 +1,58 @@
 pipeline {
+
     agent any
 
     environment {
-        DOCKER_IMAGE = 'python:3.13-slim'
-        SONARQUBE_ENV = 'SonarQubeServer'
-        APP_DIR = "${WORKSPACE}"
+        SONAR_PROJECT_KEY = 'meditracker'
+        SONAR_PROJECT_NAME = 'Meditracker'
+        DOCKER_IMAGE = 'alaeiqli/meditracker'
+        DOCKER_TAG = 'latest'
+        PYTHON_IMAGE = 'python:3.13-slim'
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Clone') {
             steps {
+                echo "📥 Cloning repository..."
                 checkout scm
             }
         }
 
-        stage('Setup & Test in Docker') {
+        stage('Setup Python') {
             steps {
-                script {
-                    // Crée un conteneur Docker pour installer les dépendances et exécuter les tests
-                    sh """
-                    docker run --rm -v ${APP_DIR}:/app -w /app ${DOCKER_IMAGE} /bin/bash -c \\
-                    "python -m venv venv && \\
-                     . venv/bin/activate && \\
-                     python -m pip install --upgrade pip setuptools wheel && \\
-                     pip install -r requirements.txt && \\
-                     python -m unittest discover || true"
-                    """
-                }
+                echo "🐍 Setting up Python environment..."
+                bat """
+                %PYTHON_IMAGE% -m venv venv
+                call venv\\Scripts\\activate
+                python -m pip install --upgrade pip setuptools wheel
+                pip install -r requirements.txt
+                """
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Test') {
             steps {
-                withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    sh """
-                    docker run --rm -v ${APP_DIR}:/app -w /app ${DOCKER_IMAGE} /bin/bash -c \\
-                    ". venv/bin/activate && \\
-                     sonar-scanner \\
-                        -Dsonar.projectKey=meditracker \\
-                        -Dsonar.projectName=meditracker \\
-                        -Dsonar.sources=. \\
-                        -Dsonar.language=py \\
-                        -Dsonar.sourceEncoding=UTF-8"
+                echo "🧪 Running tests..."
+                bat """
+                call venv\\Scripts\\activate
+                python -m unittest discover || exit 0
+                """
+            }
+        }
+
+        stage('SonarQube') {
+            steps {
+                echo "🔍 Sonar Analysis..."
+                withSonarQubeEnv('sonar_integration') {
+                    bat """
+                    call venv\\Scripts\\activate
+                    sonar-scanner ^
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
+                        -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
+                        -Dsonar.sources=. ^
+                        -Dsonar.language=py ^
+                        -Dsonar.sourceEncoding=UTF-8
                     """
                 }
             }
@@ -56,19 +66,44 @@ pipeline {
             }
         }
 
-        stage('Build Complete') {
+        stage('Docker Build') {
             steps {
-                echo "Pipeline terminé ✅"
+                echo "🐳 Docker Build..."
+                bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                echo "🚀 Docker Push..."
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'DockerHub',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASS'
+                    )
+                ]) {
+                    bat """
+                    echo %PASS% | docker login -u %USER% --password-stdin
+                    docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    """
+                }
             }
         }
     }
 
     post {
-        success {
-            echo "Pipeline réussi 🎉"
+
+        always {
+            cleanWs()
         }
+
+        success {
+            echo "✅ SUCCESS"
+        }
+
         failure {
-            echo "Pipeline échoué ❌"
+            echo "❌ FAILED"
         }
     }
 }
