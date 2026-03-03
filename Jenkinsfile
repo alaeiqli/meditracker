@@ -19,22 +19,21 @@ pipeline {
         }
 
         stage('Setup & Test Python') {
-    steps {
-        bat """
-        C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m venv venv
-        call venv\\Scripts\\activate
-        C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m pip install --upgrade pip setuptools wheel
-        pip install -r requirements.txt
-        C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m unittest discover || exit 0
-        """
-    }
-}
+            steps {
+                bat """
+                C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m venv venv
+                call venv\\Scripts\\activate
+                python -m pip install --upgrade pip setuptools wheel
+                pip install -r requirements.txt
+                python -m unittest discover || exit 0
+                """
+            }
+        }
 
         stage('SonarQube') {
             steps {
                 echo "🔍 Sonar Analysis via Maven..."
                 withSonarQubeEnv('sonar_integration') {
-                    // Ici on utilise Maven pour analyser le projet
                     bat """
                     mvn sonar:sonar ^
                         -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
@@ -46,7 +45,6 @@ pipeline {
                 }
             }
         }
-}
 
         stage('Docker Build') {
             steps {
@@ -72,7 +70,7 @@ pipeline {
                 }
             }
         }
-    }
+    } // <-- fin des stages
 
     post {
         always {
@@ -85,4 +83,4 @@ pipeline {
             echo "❌ FAILED"
         }
     }
-}
+} // <-- fin du pipeline
