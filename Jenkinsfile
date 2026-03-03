@@ -1,13 +1,10 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.13-slim'   // image officielle Python Linux
-            args '-u root:root'        // pour pouvoir installer des packages
-        }
-    }
+    agent any
 
     environment {
+        DOCKER_IMAGE = 'python:3.13-slim'
         SONARQUBE_ENV = 'SonarQubeServer'
+        APP_DIR = "${WORKSPACE}"
     }
 
     stages {
@@ -18,38 +15,35 @@ pipeline {
             }
         }
 
-        stage('Setup Python') {
+        stage('Setup & Test in Docker') {
             steps {
-                sh '''
-                python -m venv venv
-                . venv/bin/activate
-                python -m pip install --upgrade pip setuptools wheel
-                pip install -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh '''
-                . venv/bin/activate
-                python -m unittest discover || true
-                '''
+                script {
+                    // Crée un conteneur Docker pour installer les dépendances et exécuter les tests
+                    sh """
+                    docker run --rm -v ${APP_DIR}:/app -w /app ${DOCKER_IMAGE} /bin/bash -c \\
+                    "python -m venv venv && \\
+                     . venv/bin/activate && \\
+                     python -m pip install --upgrade pip setuptools wheel && \\
+                     pip install -r requirements.txt && \\
+                     python -m unittest discover || true"
+                    """
+                }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    sh '''
-                    . venv/bin/activate
-                    sonar-scanner \
-                        -Dsonar.projectKey=meditracker \
-                        -Dsonar.projectName=meditracker \
-                        -Dsonar.sources=. \
-                        -Dsonar.language=py \
-                        -Dsonar.sourceEncoding=UTF-8
-                    '''
+                    sh """
+                    docker run --rm -v ${APP_DIR}:/app -w /app ${DOCKER_IMAGE} /bin/bash -c \\
+                    ". venv/bin/activate && \\
+                     sonar-scanner \\
+                        -Dsonar.projectKey=meditracker \\
+                        -Dsonar.projectName=meditracker \\
+                        -Dsonar.sources=. \\
+                        -Dsonar.language=py \\
+                        -Dsonar.sourceEncoding=UTF-8"
+                    """
                 }
             }
         }
@@ -62,9 +56,9 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Complete') {
             steps {
-                echo "Build terminé ✅"
+                echo "Pipeline terminé ✅"
             }
         }
     }
@@ -73,7 +67,6 @@ pipeline {
         success {
             echo "Pipeline réussi 🎉"
         }
-
         failure {
             echo "Pipeline échoué ❌"
         }
