@@ -71,7 +71,18 @@ stage('SonarQube') {
             """
         }
     }
+}       
+        stage('Deploy to Kubernetes') {
+    steps {
+        echo "☸️ Deploying to Kubernetes..."
+        bat """
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+        kubectl get pods
+        """
+    }
 }
+
     } // <-- fin des stages
 
     post {
