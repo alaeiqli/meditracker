@@ -33,7 +33,9 @@ pipeline {
         stage('SonarQube') {
     steps {
         echo "🔍 Sonar Analysis..."
+        // Utilise la configuration déjà présente dans Jenkins
         withSonarQubeEnv('sonar_integration') {
+            // Active ton venv puis lance sonar-scanner installé sur Jenkins
             bat """
             call venv\\Scripts\\activate
             sonar-scanner ^
