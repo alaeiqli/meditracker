@@ -8,6 +8,7 @@ pipeline {
         DOCKER_IMAGE = 'alaeiqli/meditracker'
         DOCKER_TAG = 'latest'
         PYTHON_IMAGE = 'python:3.13-slim'
+        KUBECONFIG = 'C:\\Users\\Alae\\.kube\\config'
     }
 
     stages {
