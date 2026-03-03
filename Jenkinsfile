@@ -31,22 +31,21 @@ pipeline {
 }
 
         stage('SonarQube') {
-    steps {
-        echo "🔍 Sonar Analysis..."
-        // Utilise la configuration SonarQube du Jenkins master
-        withSonarQubeEnv('sonar_integration') {
-            bat """
-            call venv\\Scripts\\activate
-            C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m pip install --upgrade sonar-scanner
-            C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m sonar_scanner \
-                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                -Dsonar.projectName=${SONAR_PROJECT_NAME} \
-                -Dsonar.sources=. \
-                -Dsonar.language=py \
-                -Dsonar.sourceEncoding=UTF-8
-            """
+            steps {
+                echo "🔍 Sonar Analysis via Maven..."
+                withSonarQubeEnv('sonar_integration') {
+                    // Ici on utilise Maven pour analyser le projet
+                    bat """
+                    mvn sonar:sonar ^
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
+                        -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
+                        -Dsonar.sources=. ^
+                        -Dsonar.language=py ^
+                        -Dsonar.sourceEncoding=UTF-8
+                    """
+                }
+            }
         }
-    }
 }
 
         stage('Docker Build') {
