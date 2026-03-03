@@ -18,19 +18,17 @@ pipeline {
             }
         }
 
-        stage('Setup & Test Python in Docker') {
-            steps {
-                echo "🐍 Running Python in Docker..."
-                bat """
-                docker run --rm -v ${WORKSPACE}:/app -w /app ${PYTHON_IMAGE} /bin/bash -c \\
-                "python -m venv venv && \\
-                 . venv/bin/activate && \\
-                 python -m pip install --upgrade pip setuptools wheel && \\
-                 pip install -r requirements.txt && \\
-                 python -m unittest discover || true"
-                """
-            }
-        }
+        stage('Setup & Test Python') {
+    steps {
+        bat """
+        C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m venv venv
+        call venv\\Scripts\\activate
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -r requirements.txt
+        python -m unittest discover || exit 0
+        """
+    }
+}
 
         stage('SonarQube') {
             steps {
