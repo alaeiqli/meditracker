@@ -31,22 +31,21 @@ pipeline {
 }
 
         stage('SonarQube') {
-            steps {
-                echo "🔍 Sonar Analysis..."
-                withSonarQubeEnv('sonar_integration') {
-                    bat """
-                    docker run --rm -v ${WORKSPACE}:/app -w /app ${PYTHON_IMAGE} /bin/bash -c \\
-                    ". venv/bin/activate && \\
-                     sonar-scanner \\
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \\
-                        -Dsonar.projectName=${SONAR_PROJECT_NAME} \\
-                        -Dsonar.sources=. \\
-                        -Dsonar.language=py \\
-                        -Dsonar.sourceEncoding=UTF-8"
-                    """
-                }
-            }
+    steps {
+        echo "🔍 Sonar Analysis..."
+        withSonarQubeEnv('sonar_integration') {
+            bat """
+            call venv\\Scripts\\activate
+            sonar-scanner ^
+                -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
+                -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
+                -Dsonar.sources=. ^
+                -Dsonar.language=py ^
+                -Dsonar.sourceEncoding=UTF-8
+            """
         }
+    }
+}
 
         stage('Docker Build') {
             steps {
