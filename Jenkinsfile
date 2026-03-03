@@ -23,9 +23,9 @@ pipeline {
         bat """
         C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m venv venv
         call venv\\Scripts\\activate
-        python -m pip install --upgrade pip setuptools wheel
+        C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m pip install --upgrade pip setuptools wheel
         pip install -r requirements.txt
-        python -m unittest discover || exit 0
+        C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m unittest discover || exit 0
         """
     }
 }
@@ -33,16 +33,16 @@ pipeline {
         stage('SonarQube') {
     steps {
         echo "🔍 Sonar Analysis..."
-        // Utilise la configuration déjà présente dans Jenkins
+        // Utilise la configuration SonarQube du Jenkins master
         withSonarQubeEnv('sonar_integration') {
-            // Active ton venv puis lance sonar-scanner installé sur Jenkins
             bat """
             call venv\\Scripts\\activate
-            sonar-scanner ^
-                -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
-                -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
-                -Dsonar.sources=. ^
-                -Dsonar.language=py ^
+            C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m pip install --upgrade sonar-scanner
+            C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m sonar_scanner \
+                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                -Dsonar.projectName=${SONAR_PROJECT_NAME} \
+                -Dsonar.sources=. \
+                -Dsonar.language=py \
                 -Dsonar.sourceEncoding=UTF-8
             """
         }
