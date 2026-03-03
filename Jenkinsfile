@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        PYTHON = 'C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe'
         SONARQUBE_ENV = 'SonarQubeServer'
     }
 
@@ -16,9 +17,9 @@ pipeline {
         stage('Setup Python') {
             steps {
                 bat '''
-                python -m venv venv
+                "%PYTHON%" -m venv venv
                 call venv\\Scripts\\activate
-                pip install --upgrade pip
+                "%PYTHON%" -m pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
             }
@@ -28,7 +29,7 @@ pipeline {
             steps {
                 bat '''
                 call venv\\Scripts\\activate
-                python -m unittest discover || exit 0
+                "%PYTHON%" -m unittest discover || exit 0
                 '''
             }
         }
