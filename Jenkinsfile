@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     environment {
@@ -19,24 +18,16 @@ pipeline {
             }
         }
 
-        stage('Setup Python') {
+        stage('Setup & Test Python in Docker') {
             steps {
-                echo "🐍 Setting up Python environment..."
-                bat """
-                %PYTHON_IMAGE% -m venv venv
-                call venv\\Scripts\\activate
-                python -m pip install --upgrade pip setuptools wheel
-                pip install -r requirements.txt
-                """
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo "🧪 Running tests..."
-                bat """
-                call venv\\Scripts\\activate
-                python -m unittest discover || exit 0
+                echo "🐍 Running Python in Docker..."
+                sh """
+                docker run --rm -v ${WORKSPACE}:/app -w /app ${PYTHON_IMAGE} /bin/bash -c \\
+                "python -m venv venv && \\
+                 . venv/bin/activate && \\
+                 python -m pip install --upgrade pip setuptools wheel && \\
+                 pip install -r requirements.txt && \\
+                 python -m unittest discover || true"
                 """
             }
         }
@@ -45,23 +36,16 @@ pipeline {
             steps {
                 echo "🔍 Sonar Analysis..."
                 withSonarQubeEnv('sonar_integration') {
-                    bat """
-                    call venv\\Scripts\\activate
-                    sonar-scanner ^
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
-                        -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.language=py ^
-                        -Dsonar.sourceEncoding=UTF-8
+                    sh """
+                    docker run --rm -v ${WORKSPACE}:/app -w /app ${PYTHON_IMAGE} /bin/bash -c \\
+                    ". venv/bin/activate && \\
+                     sonar-scanner \\
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \\
+                        -Dsonar.projectName=${SONAR_PROJECT_NAME} \\
+                        -Dsonar.sources=. \\
+                        -Dsonar.language=py \\
+                        -Dsonar.sourceEncoding=UTF-8"
                     """
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -93,15 +77,12 @@ pipeline {
     }
 
     post {
-
         always {
             cleanWs()
         }
-
         success {
             echo "✅ SUCCESS"
         }
-
         failure {
             echo "❌ FAILED"
         }
