@@ -21,7 +21,7 @@ pipeline {
         stage('Setup & Test Python in Docker') {
             steps {
                 echo "🐍 Running Python in Docker..."
-                sh """
+                bat """
                 docker run --rm -v ${WORKSPACE}:/app -w /app ${PYTHON_IMAGE} /bin/bash -c \\
                 "python -m venv venv && \\
                  . venv/bin/activate && \\
@@ -36,7 +36,7 @@ pipeline {
             steps {
                 echo "🔍 Sonar Analysis..."
                 withSonarQubeEnv('sonar_integration') {
-                    sh """
+                    bat """
                     docker run --rm -v ${WORKSPACE}:/app -w /app ${PYTHON_IMAGE} /bin/bash -c \\
                     ". venv/bin/activate && \\
                      sonar-scanner \\
