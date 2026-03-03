@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Nom du serveur SonarQube configuré dans Jenkins
         SONARQUBE_ENV = 'SonarQubeServer'
     }
 
@@ -16,9 +15,9 @@ pipeline {
 
         stage('Setup Python') {
             steps {
-                sh '''
-                python3 -m venv venv
-                . venv/bin/activate
+                bat '''
+                python -m venv venv
+                call venv\\Scripts\\activate
                 pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
@@ -27,9 +26,9 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh '''
-                . venv/bin/activate
-                python -m unittest discover || true
+                bat '''
+                call venv\\Scripts\\activate
+                python -m unittest discover || exit 0
                 '''
             }
         }
@@ -37,14 +36,14 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    sh '''
-                    . venv/bin/activate
+                    bat '''
+                    call venv\\Scripts\\activate
 
-                    sonar-scanner \
-                    -Dsonar.projectKey=meditracker \
-                    -Dsonar.projectName=meditracker \
-                    -Dsonar.sources=. \
-                    -Dsonar.language=py \
+                    sonar-scanner ^
+                    -Dsonar.projectKey=meditracker ^
+                    -Dsonar.projectName=meditracker ^
+                    -Dsonar.sources=. ^
+                    -Dsonar.language=py ^
                     -Dsonar.sourceEncoding=UTF-8
                     '''
                 }
