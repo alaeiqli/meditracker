@@ -1,8 +1,12 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.13-slim'   // image officielle Python Linux
+            args '-u root:root'        // pour pouvoir installer des packages
+        }
+    }
 
     environment {
-        PYTHON = 'C:\\Users\\Alae\\AppData\\Local\\Programs\\Python\\Python313\\python.exe'
         SONARQUBE_ENV = 'SonarQubeServer'
     }
 
@@ -16,10 +20,10 @@ pipeline {
 
         stage('Setup Python') {
             steps {
-                bat '''
-                "%PYTHON%" -m venv venv
-                call venv\\Scripts\\activate
-                "%PYTHON%" -m pip install --upgrade pip
+                sh '''
+                python -m venv venv
+                . venv/bin/activate
+                python -m pip install --upgrade pip setuptools wheel
                 pip install -r requirements.txt
                 '''
             }
@@ -27,9 +31,9 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                bat '''
-                call venv\\Scripts\\activate
-                "%PYTHON%" -m unittest discover || exit 0
+                sh '''
+                . venv/bin/activate
+                python -m unittest discover || true
                 '''
             }
         }
@@ -37,15 +41,14 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    bat '''
-                    call venv\\Scripts\\activate
-
-                    sonar-scanner ^
-                    -Dsonar.projectKey=meditracker ^
-                    -Dsonar.projectName=meditracker ^
-                    -Dsonar.sources=. ^
-                    -Dsonar.language=py ^
-                    -Dsonar.sourceEncoding=UTF-8
+                    sh '''
+                    . venv/bin/activate
+                    sonar-scanner \
+                        -Dsonar.projectKey=meditracker \
+                        -Dsonar.projectName=meditracker \
+                        -Dsonar.sources=. \
+                        -Dsonar.language=py \
+                        -Dsonar.sourceEncoding=UTF-8
                     '''
                 }
             }
