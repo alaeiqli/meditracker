@@ -29,22 +29,23 @@ pipeline {
                 """
             }
         }
-
-        stage('SonarQube') {
-            steps {
-                echo "🔍 Sonar Analysis via Maven..."
-                withSonarQubeEnv('sonar_integration') {
-                    bat """
-                    mvn sonar:sonar ^
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
-                        -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.language=py ^
-                        -Dsonar.sourceEncoding=UTF-8
-                    """
-                }
-            }
+        
+stage('SonarQube') {
+    steps {
+        echo "🔍 Sonar Analysis with SonarScanner CLI..."
+        withSonarQubeEnv('sonar_integration') {
+            bat """
+            call venv\\Scripts\\activate
+            sonar-scanner ^
+                -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
+                -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
+                -Dsonar.sources=. ^
+                -Dsonar.language=py ^
+                -Dsonar.sourceEncoding=UTF-8
+            """
         }
+    }
+}
 
         stage('Docker Build') {
             steps {
