@@ -29,14 +29,14 @@ pipeline {
                 """
             }
         }
-        
+
 stage('SonarQube') {
     steps {
         echo "🔍 Sonar Analysis with SonarScanner CLI..."
         withSonarQubeEnv('sonar_integration') {
             bat """
             call venv\\Scripts\\activate
-            sonar-scanner ^
+            C:\\Users\\Alae\\Desktop\\sonar-scanner\\bin\\sonar-scanner.bat ^
                 -Dsonar.projectKey=${SONAR_PROJECT_KEY} ^
                 -Dsonar.projectName=${SONAR_PROJECT_NAME} ^
                 -Dsonar.sources=. ^
