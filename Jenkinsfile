@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        SONAR_TOKEN = 'squ_13c9ca6bab225f15a7f6b03395caa3a8f6e60551'
         SONAR_PROJECT_KEY = 'meditracker'
         SONAR_PROJECT_NAME = 'Meditracker'
         DOCKER_IMAGE = 'alaeiqli/meditracker'
