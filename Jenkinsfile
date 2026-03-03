@@ -55,23 +55,21 @@ stage('SonarQube') {
             }
         }
 
-        stage('Docker Push') {
-            steps {
-                echo "🚀 Docker Push..."
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'DockerHub',
-                        usernameVariable: 'USER',
-                        passwordVariable: 'PASS'
-                    )
-                ]) {
-                    bat """
-                    echo %PASS% | docker login -u %USER% --password-stdin
-                    docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                    """
-                }
-            }
+       stage('Docker Push') {
+    steps {
+        echo "🚀 Docker Push..."
+        withCredentials([usernamePassword(
+            credentialsId: 'DockerHub',
+            usernameVariable: 'USER',
+            passwordVariable: 'PASS'
+        )]) {
+            bat """
+            docker login -u %USER% -p %PASS%
+            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+            """
         }
+    }
+}
     } // <-- fin des stages
 
     post {
