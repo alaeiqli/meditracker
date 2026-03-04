@@ -62,7 +62,6 @@ pexpect==4.8.0
 pickleshare==0.7.5
 pipenv==2020.11.15
 pkginfo==1.7.0
-prometheus-client==0.10.1
 prompt-toolkit==3.0.18
 ptyprocess==0.7.0
 pycodestyle==2.7.0
@@ -110,4 +109,5 @@ zipp==3.4.1
 
 # Prometheus
 prometheus-flask-exporter==0.23.2
-prometheus-client==0.15.0
+# On laisse seulement la version compatible avec l'exporter
+# prometheus-client sera installé automatiquement
