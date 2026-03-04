@@ -2,17 +2,17 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: meditracker-sm
-  namespace: default
+  namespace: default  # Important : doit être dans le même namespace que votre app
   labels:
-    release: prometheus  # IMPORTANT : doit être "prometheus" (pas "monitoring")
+    release: prometheus  # CRUCIAL - correspond à app.kubernetes.io/instance=prometheus
 spec:
   selector:
     matchLabels:
       app: meditracker  # Doit correspondre aux labels du Service
   endpoints:
-    - port: web  # Utilisez le NOM du port, pas le numéro
+    - port: web  # Utilisez le NOM du port (pas le numéro)
       path: /metrics
       interval: 15s
   namespaceSelector:
     matchNames:
-      - default  # Le namespace où se trouve votre app
+      - default  # Le namespace de votre application

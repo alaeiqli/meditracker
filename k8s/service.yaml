@@ -2,9 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: meditracker-service
-  namespace: default  # Ajoutez le namespace si nécessaire
+  namespace: default
   labels:
-    app: meditracker  # Important pour le ServiceMonitor
+    app: meditracker
 spec:
   type: NodePort
   selector:
@@ -13,4 +13,4 @@ spec:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-      name: web  # Ajoutez un NOM au port (important pour ServiceMonitor)
+      name: web  # NOM DU PORT - important pour ServiceMonitor
