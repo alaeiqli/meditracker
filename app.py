@@ -1,31 +1,27 @@
 import os
-from flask import (
-    Flask, flash, render_template,
-    redirect, request, session, url_for)
+from flask import Flask, flash, render_template, redirect, request, session, url_for
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
+from prometheus_flask_exporter import PrometheusMetrics
+
+app = Flask(__name__)  # Création de l'app AVANT metrics
+
+metrics = PrometheusMetrics(app, path="/metrics")  # Expose /metrics correctement
 
 if os.path.exists("env.py"):
     import env
 
-app = Flask(__name__)
-
 app.config["MONGO_DBNAME"] = os.environ.get("MONGO_DBNAME")
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.secret_key = os.environ.get("SECRET_KEY")
-
+app.config["MONGO_URI"] = os.getenv(
+    "MONGO_URI",
+    "mongodb://localhost:27017/meditracker"
+)
 mongo = PyMongo(app)
-
-# Resource: Adding comments best practices -
-# https://www.askpython.com/python/python-comments
-
 
 @app.route('/')
 def home():
-    """
-    Renders homepage from main website link
-    """
     return render_template('pages/home.html')
 
 
@@ -314,6 +310,8 @@ def linkedin():
 
 
 if __name__ == "__main__":
-    app.run(host=os.environ.get("IP"),
-            port=int(os.environ.get("PORT")),
-            debug=False)
+    app.run(
+        host=os.getenv("IP", "0.0.0.0"),        # écoute toutes les interfaces
+        port=int(os.getenv("PORT", "5000")),    # par défaut 5000 si PORT non défini
+        debug=False
+    )
